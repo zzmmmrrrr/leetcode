@@ -1,3 +1,13 @@
+/*
+思路概括：
+1. buffer 模式：创建 n 个缓冲为 1 的 channel，每个协程等待自己的 channel，打印 id+1 后取模传递给下一个协程。主协程通过 chans[0] 发送初始信号。
+2. quit 模式：使用无缓冲 channel，最后一个协程在最后一次打印后不再传递 token，实现优雅退出。
+
+复杂度：
+- 时间：O(R × N)，R 为打印轮数，N 为协程数。
+- 空间：O(N)，N 个 channel。
+*/
+
 package main
 
 import (

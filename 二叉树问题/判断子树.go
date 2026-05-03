@@ -1,6 +1,17 @@
+/*
+思路概括：
+1. 先获取 subRoot 的高度 subH，用于剪枝：仅当 root 子树高度等于 subH 时才比较结构。
+2. DFS 自底向上计算每个节点的高度，高度匹配时调用 isSameTree 判定是否完全相同。
+3. 若任一子树匹配成功，通过 found 布尔值短路返回。
+
+复杂度：
+- 时间：O(M)，仅当高度匹配时才调用 isSameTree，均摊线性。
+- 空间：O(max(H1, H2))，递归栈深度。
+*/
+
 package main
 import (
-	"fmt"	
+	"fmt"
 )
 type TreeNode struct{
 	Val int
