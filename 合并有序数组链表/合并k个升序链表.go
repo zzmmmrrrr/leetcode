@@ -84,21 +84,22 @@ func mergeKLists1(lists []*ListNode) *ListNode {
 		return nil
 	}
 
-	var merge func(int, int) *ListNode
-	merge = func(left, right int) *ListNode {
+	var solve func(int, int) *ListNode //solve同时完成拆分和合并
+	//left,right是lists列表里面的idx，表明left和right 位置之间的链表要被合并
+	solve = func(left, right int) *ListNode {
 		if left == right {
 			return lists[left]
 		}
 
 		mid := left + (right-left)/2
 
-		l := merge(left, mid)
-		r := merge(mid+1, right)
+		l := solve(left, mid)
+		r := solve(mid+1, right)
 
 		return mergeTwoLists(l, r)
 	}
 
-	return merge(0, len(lists)-1)
+	return solve(0, len(lists)-1)
 }
 
 // 合并两个有序链表
@@ -130,11 +131,8 @@ func main() {
 	n1 := []int{1, 2, 3, 4}
 	n2 := []int{0, 4, 5, 8}
 	n3 := []int{6, 7, 9, 10000}
-	n4 := []int{23, 121, 332}
-	n5 := []int{1, 2, 3, 4}
-	n6 := []int{-1, 0, 2, 444545}
 	lists := buildLists(n1, n2, n3)
-	lists1 := buildLists(n4, n5, n6)
+	lists1 := buildLists(n1, n2, n3)
 	merged := mergeKLists(lists)
 	merged1 := mergeKLists1(lists1)
 	fmt.Println("下面是小顶堆方法")
