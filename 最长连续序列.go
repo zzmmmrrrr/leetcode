@@ -1,35 +1,38 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
 func main() {
-	var ans int
-	nums := []int{1, 2, 2, 3, 5, 6, 7, 8, 9, 10, 8}
-	set := make(map[int]struct{})
-	for _, n := range nums {
-		set[n] = struct{}{}
+	nums := []int{}
+	ans := longestContinous(nums)
+	fmt.Print(ans)
+}
+
+func longestContinous(nums []int) int {
+	if len(nums) == 0 {
+		return 0
 	}
-	for num := range set { //num是一个数字
-		if _, isAppeared := set[num-1]; isAppeared {
-			continue //num-1在set中，那他就不是最优的起点
+	ans := 1
+	n := len(nums)
+	set := make(map[int]bool, n)
+	for _, x := range nums {
+		set[x] = true
+	}
+
+	for _, x := range nums {
+		if set[x-1] { //x-1也在nums中,x不应该作为最长连续序列的起点
+			continue
 		}
-		//当前数字可以作为起点
-		//步长从1开始
-		// 最终break时代表nums[num+steps-1]在集合中
-		//但是nums[num+steps]不在，所以长度是steps-1+1=steps
-		//这里的长度相当于是数组元素格式
+
 		steps := 1
-		for {
-			if _, isAppeared := set[num+steps]; isAppeared {
-				steps++
-			} else {
-				break
-			}
+		for set[x+steps] {
+			steps++
 		}
-		ans = max(steps, ans)
+		ans = max(ans, steps)
+		//注意进入到这一步是x+steps已经不在set里面了,此时的steps已经越界了,超出连续序列了
+		//因此序列是从x 到x+steps-1,长度是steps-1+1=steps
 
 	}
-	fmt.Println(ans)
+	return ans
+
 }

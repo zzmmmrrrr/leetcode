@@ -11,61 +11,41 @@
 */
 
 package main
-import(
+
+import (
 	"fmt"
 	"sync"
 )
 
-func main(){
-	cnt:=1
-	chan1,chan2,chan3:=make(chan struct{},1),make(chan struct{},1),make(chan struct{},1)
-
+func main() {
+	k := 3
+	chs := make([]chan struct{}, k)
+	for i := 0; i < k; i++ {
+		chs[i] = make(chan struct{}, 1)
+	}
 	var wg sync.WaitGroup
-	wg.Add(3)
-	
-	go func(){
-		defer wg.Done()
-		for {
-			<-chan1
-			if cnt>100{
-				chan2<-struct{}{}
-				return
-			}
-			fmt.Println(cnt)
-			cnt++
-			chan2<-struct{}{}
-		}
-	}()
+	wg.Add(k)
+	curNum := 1
+	for i := 0; i < k; i++ {
+		go func(id int) {
+			defer wg.Done()
+			for {
+				<-chs[id]
+				nextId := (id + 1) % k
+				if curNum > 100 {
 
-	go func(){
-		defer wg.Done()
-		for {
-			<-chan2
-			if cnt>100{
-				chan3<-struct{}{}
-				return
-			}
-			fmt.Println(cnt)
-			cnt++
-			chan3<-struct{}{}
-		}
-	}()
+					chs[nextId] <- struct{}{}
+					return
+				}
 
-	go func(){
-		defer wg.Done()
-		for {
-			<-chan3
-			if cnt>100{
-				chan1<-struct{}{}
-				return
+				fmt.Printf("from chs[%d]:%d\n", id, curNum)
+				curNum++
+				chs[nextId] <- struct{}{}
 			}
-			fmt.Println(cnt)
-			cnt++
-			chan1<-struct{}{}
-		}
-	}()	
-	chan1<- struct{}{}
+		}(i)
+	}
 
+	chs[0] <- struct{}{}
 	wg.Wait()
 	fmt.Println("finished")
 }

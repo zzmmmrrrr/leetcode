@@ -1,28 +1,81 @@
+package main
 
-/*
-思路概括：
-1. 对 tree1 进行先序遍历，在每个节点处调用 isContained 判断以该节点为根的树是否包含 tree2 的结构。
-2. isContained 递归判断：若 tree2 为 nil 则包含成立；若 tree1 为 nil 而 tree2 非 nil 则失败；否则需值相等且左右子树分别包含。
+import "fmt"
 
-复杂度：
-- 时间：O(M × N)，M 为 tree1 节点数，N 为 tree2 节点数，最坏每个 tree1 节点都需调用 isContained。
-- 空间：O(max(H1, H2))，递归栈深度。
-*/
-
-func preOrder(tree1,tree2 *TreeNode){
-	if tree1==nil || tree2==nil{
-		return false
-	}
-	return isContained(tree1,tree2) || preOrder(tree1.Left,tree2)||preOrder(tree1.Right,tree2)
-
+type TreeNode struct {
+	Left, Right *TreeNode
+	Val         int
 }
 
-func isContained(p,q *TreeNode) bool{
-	if q==nil{
-		return true
-	}
-	if p==nil{
+/*
+判断 tree2 是否是 tree1 的子结构
+*/
+func preOrder(tree1, tree2 *TreeNode) bool {
+	// 题目通常规定：空树不是任意树的子结构
+	if tree1 == nil || tree2 == nil {
 		return false
 	}
-	return p.Val==q.Val && isContained(p.Left,q.Left) &&isContained(p.Right,q.Right)
+
+	// 当前节点匹配
+	// 或左子树存在匹配
+	// 或右子树存在匹配
+	return isContained(tree1, tree2) ||
+		preOrder(tree1.Left, tree2) ||
+		preOrder(tree1.Right, tree2)
+}
+
+/*
+判断从当前节点开始是否匹配
+*/
+func isContained(p, q *TreeNode) bool {
+	// q 已匹配完成
+	if q == nil {
+		return true
+	}
+
+	// p 已空，但 q 还没匹配完
+	if p == nil {
+		return false
+	}
+
+	// 当前值相等
+	// 且左右子树都匹配
+	return p.Val == q.Val &&
+		isContained(p.Left, q.Left) &&
+		isContained(p.Right, q.Right)
+}
+
+func main() {
+
+	/*
+	   tree1
+
+	       1
+	      / \
+	     2   3
+	    / \
+	   4   5
+	*/
+
+	tree1 := &TreeNode{Val: 1}
+	tree1.Left = &TreeNode{Val: 2}
+	tree1.Right = &TreeNode{Val: 3}
+	tree1.Left.Left = &TreeNode{Val: 4}
+	tree1.Left.Right = &TreeNode{Val: 5}
+
+	/*
+	   tree2
+
+	       2
+	      / \
+	     4   5
+	*/
+
+	tree2 := &TreeNode{Val: 2}
+	tree2.Left = &TreeNode{Val: 4}
+	tree2.Right = &TreeNode{Val: 5}
+
+	res := preOrder(tree1, tree2)
+
+	fmt.Println(res)
 }

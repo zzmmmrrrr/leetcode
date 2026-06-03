@@ -2,48 +2,37 @@ package main
 
 import "fmt"
 
-func expand(s string, left, right int) (int, int) {
+func expand(s string, left, right int) int {
 	for left >= 0 && right < len(s) && s[left] == s[right] {
 		left--
 		right++
 	}
-
-	return left + 1, right - 1
+	return right - 1 - (left + 1) + 1 //退出for循环时right和left已经越界了，不满足s[left]==s[right]
 }
 
-func longestPalindrome(s string) (string, int) {
+func longest(s string) string {
 	if len(s) == 0 {
-		return "", 0
+		return ""
 	}
 
-	bestStart := 0
-	bestLen := 1
-
+	maxStart, maxLen := 0, 1
 	for i := 0; i < len(s); i++ {
-		start, end := expand(s, i, i)
-		oddLen := end - start + 1
-		if oddLen > bestLen {
-			bestLen = oddLen
-			bestStart = start
-		}
+		odd := expand(s, i, i)
+		even := expand(s, i, i+1)
 
-		if i+1 < len(s) {
-			start, end = expand(s, i, i+1)
-			evenLen := end - start + 1
-			if evenLen > bestLen {
-				bestLen = evenLen
-				bestStart = start
-			}
+		curLen := max(odd, even)
+		if curLen > maxLen {
+			maxLen = curLen
+			maxStart = i - (curLen-1)/2
 		}
 
 	}
+	return s[maxStart : maxStart+maxLen]
 
-	return s[bestStart : bestStart+bestLen], bestLen
 }
 
 func main() {
-
-	s := "123329"
-	substr, subLen := longestPalindrome(s)
-	fmt.Println(substr, subLen)
+	s := "12328"
+	ans := longest(s)
+	fmt.Println(ans)
 }

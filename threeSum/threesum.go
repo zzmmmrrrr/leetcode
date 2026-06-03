@@ -19,46 +19,55 @@ import (
 	"sort"
 )
 
-func threeSum(nums []int) [][]int{
-	n:=len(nums)
+func threeSum(nums []int) [][]int {
+	n := len(nums)
 	sort.Ints(nums)
-	ans:=make([][]int,0)
+	ans := make([][]int, 0)
 
-	for i:=0;i<n-2;i++{
+	for i := 0; i+2 < n; i++ {
 		//仅仅nums[i]就已经大于0
-		//注意等于0时不应该剪枝，因为后续可以出现两个相反数
-		if nums[i]>0{
+		//注意等于0时不应该剪枝，因为后续可以出现三个数字都为0
+		if nums[i] > 0 {
 			break
 		}
-		//固定nums[i]时，当前最小组合已经大于0，代表后续不可能有合法解了
-		if nums[i]+nums[i+1]+nums[i+2]>0 {break}
-		//固定nums[i]时，当前最大组合已经小于0，代表需要更换答案数组固定的第一个元素
-		if nums[i]+nums[n-2]+nums[n-1]<0 {continue}
-		if i>0 && nums[i]==nums[i-1]{
+		// //固定nums[i]时，当前最小组合已经大于0，代表后续不可能有合法解了
+		// if nums[i]+nums[i+1]+nums[i+2] > 0 {
+		// 	break
+		// }
+		// //固定nums[i]时，当前最大组合已经小于0，代表需要更换答案数组固定的第一个元素
+		// if nums[i]+nums[n-2]+nums[n-1] < 0 {
+		// 	continue
+		// }
+
+		//为了防止三元组的第一个元素出现重复,只考虑相同元素第一次出现的位置
+		//注意这里不能通过考虑最后一次出现的位置来避免组合重复
+		//原因是出现多个0的时候,000也是一组合法解
+		//由于数组是升序排列的,只考虑最后一次出现的0,再从右侧区间找三元组后续更大的两个元素会导致漏掉000这组解
+		if i > 0 && nums[i] == nums[i-1] {
 			continue
 		}
-		l,r:=i+1,n-1
+		l, r := i+1, n-1
 
-		for l<r{
-			sum:=nums[i]+nums[l]+nums[r]
-			switch{
-			case sum==0:
-				ans=append(ans,[]int{nums[i],nums[l],nums[r]})
+		for l < r {
+			sum := nums[i] + nums[l] + nums[r]
+			switch {
+			case sum == 0:
+				ans = append(ans, []int{nums[i], nums[l], nums[r]})
 				//跳过和左指针当前元素重复的元素
-				for l<r&&nums[l]==nums[l+1]{
+				for l < r && nums[l] == nums[l+1] {
 					l++
 				}
 				l++
 				//跳过和右指针当前元素重复的元素
-				for l<r &&nums[r]==nums[r-1]{
+				for l < r && nums[r] == nums[r-1] {
 					r--
 				}
 				r--
 
-			case sum<0:
+			case sum < 0:
 				l++
 
-			case sum>0:
+			case sum > 0:
 				r--
 			}
 		}
@@ -68,12 +77,13 @@ func threeSum(nums []int) [][]int{
 	return ans
 
 }
-func main(){
-	nums:=[]int{1,-2,3,4-5,-5,2,2,2,2,-1,1,-3,-4,5,5,5}
-	ans:=threeSum(nums)
-	for _,col:=range ans{
-		for _,x:=range col{
-			fmt.Printf("%d ",x)
+func main() {
+	nums := []int{0, 0, 0, 2, -2, 1, 1, 3, -4}
+	ans := threeSum(nums)
+
+	for _, col := range ans {
+		for _, x := range col {
+			fmt.Printf("%d ", x)
 		}
 		fmt.Println()
 	}

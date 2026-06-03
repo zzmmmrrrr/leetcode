@@ -21,10 +21,10 @@ package main
 import "fmt"
 
 type Node struct {
-	key, value int
-	pre, next  *Node
+	key, val  int
+	pre, next *Node
 }
-type LRUCache struct {
+type LRU struct {
 	capacity  int
 	dummy     *Node
 	keyToNode map[int]*Node
@@ -33,11 +33,11 @@ type LRUCache struct {
 //新建结构体函数+
 //增删查改四个函数
 
-func Constructor(capacity int) LRUCache {
+func newLRU(capacity int) LRU {
 	dummy := &Node{}
 	dummy.next = dummy
 	dummy.pre = dummy
-	return LRUCache{
+	return LRU{
 		capacity:  capacity,
 		dummy:     dummy,
 		keyToNode: map[int]*Node{},
@@ -48,40 +48,45 @@ func Constructor(capacity int) LRUCache {
 //需要实现在map和list中保留对应元素,对应压入
 // 容量超标时，还需要实现在map和list中删掉键值对和node
 
-func (l *LRUCache) removeNode(node *Node) {
+func (l *LRU) removeNode(node *Node) {
 	node.pre.next = node.next
 	node.next.pre = node.pre
 	//不需要修改剩下的两个指针，
 	//原因是go语言自动垃圾回收，扫描发现node没有被引用就会将其回收
 }
 
-func (l *LRUCache) pushNode(node *Node) {
+func (l *LRU) pushNode(node *Node) {
+	//头插法
+	//先把node的首尾指针接到已有节点上
+	//再把已有节点的指针指向node
 	node.pre = l.dummy
 	node.next = l.dummy.next
 	l.dummy.next = node
 	node.next.pre = node
+
 }
-func (l *LRUCache) getNode(key int) *Node {
+func (l *LRU) getNode(key int) *Node {
 	node := l.keyToNode[key]
 	if node == nil {
 		return nil
 	}
+	//相当于touch机制，一旦获取某个node，就把node位置更新到最前面
 	l.removeNode(node)
 	l.pushNode(node)
 	return node
 
 }
 
-func (l *LRUCache) Put(key int, value int) {
+func (l *LRU) Put(key int, val int) {
 	oldNode := l.getNode(key)
 	if oldNode != nil { //已经有键相同的node了，只需要更新值
-		oldNode.value = value
+		oldNode.val = val
 		return
 	}
 	//需要插入新的Node
 	node := &Node{
-		key:   key,
-		value: value,
+		key: key,
+		val: val,
 	}
 	l.keyToNode[key] = node
 	l.pushNode(node)
@@ -94,17 +99,18 @@ func (l *LRUCache) Put(key int, value int) {
 
 }
 
-func (l *LRUCache) Get(key int) int {
+func (l *LRU) Get(key int) int {
 	node := l.getNode(key)
 	if node == nil {
 		return -1
 	}
-	return node.value
+	return node.val
 }
 
 func main() {
-	testLru := Constructor(10)
-	testLru.Put(1, 1314)
-	ans := testLru.Get(1)
+	testLRU := newLRU(10)
+	testLRU.Put(1, 1314)
+	ans := testLRU.Get(1)
 	fmt.Println(ans)
+	fmt.Println(testLRU.keyToNode[1])
 }

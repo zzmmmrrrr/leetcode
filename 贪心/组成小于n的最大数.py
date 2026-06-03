@@ -114,7 +114,7 @@ def max_num_less_than_n(digits: list[int], n: int) -> int:
 # 测试运行
 if __name__ == "__main__":
     test_cases = [
-        {"digits": [1, 3, 5, 9], "n": 5432, "expect": 5399},
+        {"digits": [1, 2,3,4, 5], "n": 5433, "expect": 5432},
         {"digits": [1, 2, 9], "n": 2151, "expect": 2129},
         {"digits": [2, 9], "n": 2111, "expect": 999},
         {"digits": [4, 3, 5, 2], "n": 5432, "expect": 5425} # 你最初卡住的那个特殊 case

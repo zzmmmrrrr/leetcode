@@ -1,129 +1,156 @@
-/*【函数实现说明】
-1. maxNumLessThanN(digits []int, n int) int
-   - 功能：寻找由给定数字集合 digits 组成的、严格小于 n 的最大整数。
-   - 参数：digits (可选数字切片), n (限制上限的目标整数)。
-
-2. dfs(digits, nToDigits, ans []int, idx int) bool
-   - 功能：通过 DFS 贪心回溯，尝试构造一个与 n 位数相同且严格小于 n 的最大数。
-   - 参数：digits (去重排序后的可选数字), nToDigits (n 的逐位切片), ans (当前构造中的数字切片), idx (当前处理的位索引)。
-
-3. intToDigits(n int) []int / digitsToInt(digits []int) []int
-   - 功能：实现整数与逐位切片（如 5432 <-> [5, 4, 3, 2]）之间的相互转换。
-
-4. unique(nums []int) []int
-   - 功能：对已经有序的切片进行原地去重。
-
-【复杂度分析】
-- 时间复杂度：O(K log K + L * K)
-  其中 K 为 digits 的长度，L 为 n 的十进制位数。
-  - 排序去重耗时 O(K log K)。
-  - DFS 过程中，每一位最多遍历整个 digits 数组（长为 K），总共有 L 位，因此构造同位数耗时 O(L * K)。
-- 空间复杂度：O(L)
-  - 存储 nToDigits 和 ans 切片各占用 O(L) 空间。
-  - DFS 递归栈的最大深度为 L，占用 O(L) 空间。
-*/
-
 package main
 
 import (
 	"fmt"
 	"slices"
 	"sort"
+	"strconv"
 )
 
-func maxNumLessThanN(digits []int, n int) int {
-	//1.预处理：排序去重digits，拆解n为位数组
-	sort.Ints(digits)
-	digits = unique(digits)
-	digitsN := intToDigits(n)
-	lenN := len(digitsN)
-	digitsAns := make([]int, lenN)
+/*
+思路概括：
+1. 将可用数字 nums 排序并去重，方便后续按从大到小尝试构造结果。
+2. 把 n 拆分成数字数组 digitsN，按位进行 DFS 构造。
+3. 对于当前位置：
+   - 若选择的数字小于 n 当前位，则后续所有位直接填最大数字即可得到当前分支最优解（贪心剪枝）。
+   - 若选择的数字等于 n 当前位，则继续递归处理下一位。
+   - 若选择的数字大于 n 当前位，则该分支一定超过 n，直接跳过。
+4. 如果最终无法构造出与 n 同位数且小于 n 的数字，则答案一定是长度比 n 少一位、且所有位都取最大数字的结果。
 
-	if dfs(digits, digitsN, digitsAns, 0) {
-		return digitsToInt(digitsAns)
-	}
+时间复杂度：
+- 排序：O(m log m)，其中 m 为 nums 长度。
+- DFS：
+  由于一旦某位选到小于目标位的数字，就立即贪心填充后续位并返回，
+  不会继续产生指数级搜索。
+  每一位最多遍历 m 个数字，因此 DFS 总复杂度为 O(lenN × m)。
+- 综合复杂度：O(m log m + lenN × m)。
 
-	maxDigit := digits[len(digits)-1]
-	ans := 0
-	for i := 0; i < lenN-1; i++ {
-		ans = ans*10 + maxDigit
-	}
-	return ans
-}
-
-func dfs(digits []int, digitsN []int, digitsAns []int, idx int) bool {
-	lenN := len(digitsN)
-	if idx == lenN {
-		return true
-	}
-	//如果能走到idx==lenN，代表前面的位没有触发d<digitsN[idx]，因此此时一定是ans=n
-	//如果题目允许返回小于等于n的最大值，此处是true
-	//如果不允许就返回false
-
-	for i := len(digits) - 1; i >= 0; i-- {
-		d := digits[i]
-
-		if d < digitsN[idx] {
-			digitsAns[idx] = d
-			maxDigit := digits[len(digits)-1]
-			for j := idx + 1; j < lenN; j++ {
-				digitsAns[j] = maxDigit
-			}
-			return true
-		} else if d > digitsN[idx] {
-			continue
-		} else {
-			digitsAns[idx] = d
-			if dfs(digits, digitsN, digitsAns, idx+1) {
-				return true
-			}
-		}
-
-	}
-	return false
-}
-
-// intToDigits 将整数转换为切片，例如 5432 -> [5, 4, 3, 2]
-func intToDigits(n int) []int {
-	if n == 0 {
-		return []int{0}
-	}
-	res := []int{}
-	for n > 0 {
-		res = append(res, n%10)
-		n /= 10
-	}
-	slices.Reverse(res)
-	return res
-}
-
-// digitsToInt 将切片转换回整数，例如 [5, 4, 3, 2] -> 5432
-func digitsToInt(digits []int) int {
-	ans := 0
-	for _, val := range digits {
-		ans = ans*10 + val
-	}
-	return ans
-}
-
-// unique 对有序切片进行原地去重
-func unique(nums []int) []int {
-	n := len(nums)
-	if n <= 1 {
-		return nums
-	}
-	ans := []int{nums[0]}
-	for i := 1; i < n; i++ {
-		if nums[i] != nums[i-1] {
-			ans = append(ans, nums[i])
-		}
-	}
-	return ans
-}
+空间复杂度：
+- digitsN 数组占 O(lenN)。
+- DFS 递归深度最多为 lenN，因此递归栈占 O(lenN)。
+- 总空间复杂度：O(lenN)。
+*/
 
 func main() {
-	n := 5432
-	digits := []int{5, 4, 3, 2}
-	ans := maxNumLessThanN(digits, n)
-	fmt.Println(ans)
+	n := 5433
+	nums := []int{1, 2, 3, 4, 5}
+
+	// 排序并去重，保证数字有序
+	sort.Ints(nums)
+	nums = slices.Compact(nums)
+
+	// 将 n 转换为数字数组，方便逐位比较
+	strN := strconv.Itoa(n)
+	lenN := len(strN)
+	digitsN := make([]int, lenN)
+	for i, c := range strN {
+		digitsN[i] = int(c - '0')
+	}
+
+	// 记录能够构造出的最大合法答案
+	maxSameLenNum := -1
+
+	/*
+		curNum：当前已经构造出的前缀数字
+		idx    ：当前处理到的位下标
+	*/
+	var dfs func(curNum []int, idx int)
+
+	dfs = func(curNum []int, idx int) {
+		// 已构造完成一个与 n 等长的数字
+		if len(curNum) == lenN {
+			temp := digitsToInt(curNum)
+
+			// 必须严格小于 n
+			if temp < n {
+				maxSameLenNum = max(temp, maxSameLenNum)
+			}
+			return
+		}
+
+		targetDigit := digitsN[idx]
+
+		// 从大到小枚举，优先尝试更大的数字
+		for i := len(nums) - 1; i >= 0; i-- {
+
+			// 当前位比目标位小
+			if nums[i] < targetDigit {
+
+				fmt.Printf("idx=%d, curNum before append=%v, cap=%d\n",
+					idx, curNum, cap(curNum))
+
+				curNum = append(curNum, nums[i])
+
+				fmt.Printf("idx=%d, curNum after append=%v, cap=%d\n",
+					idx, curNum, cap(curNum))
+
+				/*
+					关键剪枝：
+					当前位已经严格小于 n 对应位，
+					后面的位无需搜索，直接全部填最大数字即可得到
+					当前分支的最优解。
+				*/
+				maxElement := nums[len(nums)-1]
+				for j := idx + 1; j < lenN; j++ {
+					curNum = append(curNum, maxElement)
+				}
+
+				maxSameLenNum = max(digitsToInt(curNum), maxSameLenNum)
+
+				// 因为数字按降序遍历，第一个满足 < targetDigit 的方案
+				// 已经是当前层能取得的最优结果，可以直接返回
+				return
+			}
+
+			// 当前位比目标位大，一定超过 n，剪枝
+			if nums[i] > targetDigit {
+				continue
+			}
+
+			/*
+				当前位与目标位相等，
+				继续递归判断后续位是否能够构造出合法答案。
+			*/
+			curNum = append(curNum, nums[i])
+
+			dfs(curNum, idx+1)
+
+			// 回溯，恢复现场
+			curNum = curNum[:len(curNum)-1]
+		}
+	}
+
+	// 从最高位开始搜索
+	dfs([]int{}, 0)
+
+	if maxSameLenNum != -1 {
+		fmt.Println(maxSameLenNum)
+	} else {
+		/*
+			不存在与 n 同长度且小于 n 的合法数字。
+
+			此时答案一定是长度少一位的最大数字，
+			例如：
+			n = 1000
+			nums = [1,2,3]
+			答案为 333
+		*/
+		maxShorterLenNum := make([]int, lenN-1)
+		maxElement := nums[len(nums)-1]
+
+		for i := range maxShorterLenNum {
+			maxShorterLenNum[i] = maxElement
+		}
+
+		fmt.Println(digitsToInt(maxShorterLenNum))
+	}
+}
+
+// 将数字数组转换成整数
+func digitsToInt(digits []int) int {
+	ans := 0
+	for _, x := range digits {
+		ans = ans*10 + x
+	}
+	return ans
 }
